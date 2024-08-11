@@ -1,84 +1,57 @@
 import React from 'react';
-import { TodoCounter } from './TodoCounter';
-import { TodoSearch } from './TodoSearch';
-import { TodoList } from './TodoList';
-import { TodoItem } from './TodoItem';
-import { CreateTodoButton } from './CreateTodoButton';
+import { TodoContext, TodoProvider } from './TodoContext';
+import { TodoCounter } from './TodoCounter/Index';
+import { TodoSearch } from './TodoSearch/Index';
+import { TodoList } from './TodoList/Index';
+import { TodoItem } from './TodoItem/TodoItem';
+import { CreateTodoButton } from './CreateTodoButton/Index';
+import { Empty } from './Empty.js';
+import { Error } from './Error.js';
+import { Loading } from './Loading.js';
+import { Modal } from './Modal/Index.js';
+import { TodoForm } from './TodoForm/Index.js';
+
+
 
 /*const defaultTodos = [
   { text: 'Cortar cebolla', completed: true },
   { text: 'Tomar el Curso de Intro a React.js', completed: false },
   { text: 'Llorar con la Llorona', completed: false },
   { text: 'LALALALALA', completed: false },
-];*/
-function useLocalStorage(itemName,parsedItem) {
-  const localStorageTodos = localStorage.getItem(itemName)
-  let parsedTodos
-  if(!localStorageTodos){
-    localStorage.setItem(itemName,JSON.stringify(parsedItem))
-    parsedTodos = parsedItem
-  }else {
-    parsedTodos = JSON.parse(localStorageTodos)
-  }
-  const [item,setItem] = React.useState(parsedTodos)
-  const saveItem = (newTodos)  => {
-    localStorage.setItem(itemName, JSON.stringify(newTodos))
-    setItem(newTodos)
-}
-return [item,saveItem]
-  }
-function App() {
- 
-  const [searchValue,setSearchValue] = React.useState('')
-  console.log(searchValue);
-  const [todos, saveTodos] = useLocalStorage('TODOS_V1',[]); 
-  const completedTodos = todos.filter(todos => todos.completed).length
-  const todoss = todos.length
-  const todosLi = todos.filter((todo) => {
-    return todo.text.toLowerCase().includes(searchValue.toLocaleLowerCase())
-  })
-  
-  const completeTodo = (text) => {
-    const newTodos = [...todos]
-    const todoIndex = newTodos.findIndex(
-    (todo) => todo.text == text
-    )
-    newTodos[todoIndex].completed = true
-    saveTodos(newTodos)
-  }
-  const deleteTodo = (text) => {
-    const newTodos = [...todos]
-    const todoIndex = newTodos.findIndex(
-    (todo) => todo.text == text
-    )
-    newTodos.splice(todoIndex,1)
-    saveTodos(newTodos)
-  }
-  
-return (   
-<>
-      <TodoCounter completed={completedTodos} total={todoss} />
-      <TodoSearch searchValue={searchValue} setSearchValue={setSearchValue} />
+];
+localStorage.setItem('t_1',JSON.stringify(defaultTodos))
+localStorage.removeItem('t_1')*/
 
-      <TodoList>
-        {todosLi.map(todo => (
-          <TodoItem
-            key={todo.text}
-            text={todo.text}
-            completed={todo.completed}
-            onComplete={()=>completeTodo(todo.text)}
-            onDelete={()=>deleteTodo(todo.text)}
-           
-          />
-        ))}
-      </TodoList>
-      
-      <CreateTodoButton />
-    </>
+function App() {
+  return (
+    <TodoProvider>
+      <TodoContext.Consumer>
+        {({ openModal, setopenMOdal, loading, error, completeTodo, deleteTodo, todosLi, searchValue, setSearchValue, completedTodos, totalTodos }) => (
+          <>
+            <TodoCounter completed={completedTodos} total={totalTodos} />
+            <TodoSearch searchValue={searchValue} setSearchValue={setSearchValue} />
+            
+            <TodoList>
+              {loading && <Loading />}
+              {error && <Error />}
+              {(!loading && todosLi.length === 0) && <Empty />}
+              {todosLi.map(todo => (
+                <TodoItem
+                  key={todo.text}
+                  text={todo.text}
+                  completed={todo.completed}
+                  onComplete={() => completeTodo(todo.text)}
+                  onDelete={() => deleteTodo(todo.text)}
+                />
+              ))}
+            </TodoList>
+            <CreateTodoButton />
+            {openModal && (<Modal><TodoForm/></Modal> )}
+          </>
+        )}
+      </TodoContext.Consumer>
+    </TodoProvider>
   );
 }
-
-
-
 
 export default App;
